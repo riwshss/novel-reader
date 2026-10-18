@@ -1,0 +1,477 @@
+:root {
+  --bg: #f4ecd8;
+  --fg: #3b3024;
+  --sub: #9a8b73;
+  --panel: #fbf5e6;
+  --line: #e0d4b8;
+  --accent: #c06a2b;
+  --font-size: 19px;
+  --line-height: 1.8;
+  --font: "Songti SC", serif;
+  --pad-x: 22px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --ui-font: -apple-system, "PingFang TC", "PingFang SC", "Microsoft JhengHei", sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--ui-font);
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  overscroll-behavior: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+[hidden] { display: none !important; }
+
+.view {
+  position: fixed;
+  inset: 0;
+}
+
+/* ---------- 書架 ---------- */
+#shelf {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: calc(var(--safe-top) + 12px) 16px calc(var(--safe-bottom) + 24px);
+}
+
+.shelf-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.shelf-header h1 {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 700;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border-radius: 999px;
+  padding: 9px 16px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.shelf-status {
+  white-space: pre-line;
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--panel);
+  font-size: 14px;
+}
+
+.shelf-status.error { color: #c0392b; }
+
+.book-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.book-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+  border-radius: 14px;
+  background: var(--panel);
+  cursor: pointer;
+}
+
+.book-cover {
+  flex: none;
+  width: 52px;
+  height: 70px;
+  border-radius: 4px 8px 8px 4px;
+  display: grid;
+  place-items: center;
+  padding: 4px;
+  color: #fff;
+  font-family: "Songti SC", "Songti TC", serif;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  overflow: hidden;
+  box-shadow: inset 4px 0 0 rgba(0, 0, 0, 0.18);
+}
+
+.book-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.book-title {
+  font-size: 17px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.book-meta {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--sub);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.book-progress {
+  margin-top: 8px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.book-progress > div {
+  height: 100%;
+  background: var(--accent);
+}
+
+.book-delete {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: var(--sub);
+  font-size: 18px;
+}
+
+.empty-hint {
+  margin-top: 30vh;
+  text-align: center;
+  font-size: 18px;
+}
+
+.empty-hint p { margin: 6px 0; }
+.empty-hint .sub { font-size: 14px; color: var(--sub); }
+
+/* ---------- 閱讀器 ---------- */
+.stage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.reader-head,
+.reader-foot {
+  position: absolute;
+  left: var(--pad-x);
+  right: var(--pad-x);
+  font-size: 12px;
+  color: var(--sub);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reader-head {
+  top: var(--safe-top);
+  height: 32px;
+  line-height: 32px;
+}
+
+.reader-foot {
+  bottom: var(--safe-bottom);
+  height: 30px;
+  line-height: 30px;
+  display: flex;
+  justify-content: space-between;
+  font-variant-numeric: tabular-nums;
+}
+
+.page-viewport {
+  position: absolute;
+  top: calc(var(--safe-top) + 34px);
+  bottom: calc(var(--safe-bottom) + 30px);
+  left: 0;
+  right: 0;
+  padding: 0 var(--pad-x);
+  overflow: hidden;
+}
+
+.page-content {
+  height: 100%;
+  column-fill: auto;
+  font-family: var(--font);
+  font-size: var(--font-size);
+  line-height: var(--line-height);
+  text-align: justify;
+  will-change: transform;
+}
+
+.page-content.animate {
+  transition: transform 0.22s ease-out;
+}
+
+.page-content h2 {
+  margin: 0.4em 0 1.2em;
+  font-size: 1.35em;
+  line-height: 1.4;
+  font-weight: 700;
+  text-align: left;
+  break-after: avoid;
+}
+
+.page-content p {
+  margin: 0 0 0.45em;
+  text-indent: 2em;
+  overflow-wrap: anywhere;
+}
+
+/* 選單 */
+.menu {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+}
+
+.menu-top,
+.menu-bottom {
+  background: var(--panel);
+  box-shadow: 0 0 16px rgba(0, 0, 0, 0.12);
+}
+
+.menu-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: calc(var(--safe-top) + 8px) 16px 10px;
+}
+
+.menu-title {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.menu-close-area { flex: 1; }
+
+.menu-bottom {
+  padding: 10px 16px calc(var(--safe-bottom) + 10px);
+}
+
+.slider-label {
+  min-height: 20px;
+  font-size: 13px;
+  color: var(--sub);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chapter-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 6px 0 10px;
+}
+
+.chapter-nav input {
+  flex: 1;
+  accent-color: var(--accent);
+}
+
+.btn-text {
+  padding: 8px 4px;
+  font-size: 15px;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.menu-actions {
+  display: flex;
+  justify-content: space-around;
+}
+
+.btn-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 64px;
+  padding: 6px;
+  font-size: 20px;
+}
+
+.btn-icon span { font-size: 12px; }
+
+/* 目錄抽屜 */
+.drawer {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+}
+
+.drawer-panel {
+  width: 82%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  padding-top: var(--safe-top);
+}
+
+.drawer-mask {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  font-size: 18px;
+  font-weight: 700;
+  border-bottom: 1px solid var(--line);
+}
+
+.toc-list {
+  flex: 1;
+  margin: 0;
+  padding: 0 0 var(--safe-bottom);
+  list-style: none;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.toc-list li {
+  padding: 13px 16px;
+  font-size: 15px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.toc-list li.current {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* 設定面板 */
+.sheet {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+}
+
+.sheet-mask { flex: 1; }
+
+.sheet-panel {
+  background: var(--panel);
+  border-radius: 16px 16px 0 0;
+  padding: 16px 16px calc(var(--safe-bottom) + 16px);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+}
+
+.setting-name {
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stepper span {
+  min-width: 44px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.stepper button,
+.options button {
+  min-width: 52px;
+  padding: 7px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 15px;
+}
+
+.options {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.options button.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.options button.swatch {
+  min-width: 52px;
+}
+
+/* 提示 */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--safe-bottom) + 60px);
+  transform: translateX(-50%);
+  z-index: 50;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  font-size: 14px;
+  pointer-events: none;
+  white-space: nowrap;
+}

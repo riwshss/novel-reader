@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>小說閱讀器</title>
+  <meta name="description" content="離線 TXT 小說閱讀器">
+  <meta name="theme-color" content="#f4ecd8">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="閱讀">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- 書架 -->
+  <section id="shelf" class="view">
+    <header class="shelf-header">
+      <h1>書架</h1>
+      <label class="btn-primary" for="file-input">＋ 匯入 TXT</label>
+      <input type="file" id="file-input" accept=".txt,text/plain" multiple hidden>
+    </header>
+    <p id="shelf-status" class="shelf-status" hidden></p>
+    <ul id="book-list" class="book-list"></ul>
+    <div id="empty-hint" class="empty-hint" hidden>
+      <p>書架是空的</p>
+      <p class="sub">按右上角「匯入 TXT」，從「檔案」App 選擇小說</p>
+    </div>
+  </section>
+
+  <!-- 閱讀器 -->
+  <section id="reader" class="view" hidden>
+    <div id="stage" class="stage">
+      <div id="chapter-name" class="reader-head"></div>
+      <div id="page-viewport" class="page-viewport">
+        <div id="page-content" class="page-content"></div>
+      </div>
+      <div class="reader-foot">
+        <span id="page-info"></span>
+        <span><span id="clock"></span>　<span id="percent-info"></span></span>
+      </div>
+    </div>
+
+    <div id="menu" class="menu" hidden>
+      <div class="menu-top">
+        <button id="btn-back" class="btn-text" type="button">‹ 書架</button>
+        <span id="menu-title" class="menu-title"></span>
+      </div>
+      <div id="menu-close-area" class="menu-close-area"></div>
+      <div class="menu-bottom">
+        <div id="slider-label" class="slider-label"></div>
+        <div class="chapter-nav">
+          <button id="btn-prev-ch" class="btn-text" type="button">上一章</button>
+          <input id="chapter-slider" type="range" min="0" max="0" value="0" aria-label="章節進度">
+          <button id="btn-next-ch" class="btn-text" type="button">下一章</button>
+        </div>
+        <div class="menu-actions">
+          <button id="btn-toc" class="btn-icon" type="button">☰<span>目錄</span></button>
+          <button id="btn-settings" class="btn-icon" type="button">Aa<span>設定</span></button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toc" class="drawer" hidden>
+      <div class="drawer-panel">
+        <div class="drawer-header">
+          <span>目錄</span>
+          <button id="btn-toc-close" class="btn-text" type="button">關閉</button>
+        </div>
+        <ul id="toc-list" class="toc-list"></ul>
+      </div>
+      <div id="toc-mask" class="drawer-mask"></div>
+    </div>
+
+    <div id="settings-panel" class="sheet" hidden>
+      <div id="settings-mask" class="sheet-mask"></div>
+      <div class="sheet-panel">
+        <div class="setting-row">
+          <span class="setting-name">字體大小</span>
+          <div class="stepper">
+            <button type="button" data-step="fontSize" data-dir="-1">A−</button>
+            <span id="val-fontSize"></span>
+            <button type="button" data-step="fontSize" data-dir="1">A＋</button>
+          </div>
+        </div>
+        <div class="setting-row">
+          <span class="setting-name">行距</span>
+          <div class="stepper">
+            <button type="button" data-step="lineHeight" data-dir="-1">−</button>
+            <span id="val-lineHeight"></span>
+            <button type="button" data-step="lineHeight" data-dir="1">＋</button>
+          </div>
+        </div>
+        <div class="setting-row">
+          <span class="setting-name">字型</span>
+          <div id="font-options" class="options"></div>
+        </div>
+        <div class="setting-row">
+          <span class="setting-name">背景</span>
+          <div id="theme-options" class="options"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div id="toast" class="toast" role="status" hidden></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
