@@ -20,6 +20,7 @@ function scoreText(text) {
   return common - bad * 10;
 }
 
+/* eslint-disable compat/compat -- 匯入前 shelf.js 已檢查 TextDecoder 是否存在（iOS 10.0–10.2 沒有） */
 /** 把 txt 的位元組解碼成字串，自動判斷 UTF-8 / UTF-16 / GB18030 / Big5。 */
 export function decodeText(bytes) {
   const u8 = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
@@ -48,6 +49,7 @@ export function decodeText(bytes) {
   }
   return best ? best.text : new TextDecoder('utf-8').decode(u8);
 }
+/* eslint-enable compat/compat */
 
 const NUM = '0-9０-９零〇一二三四五六七八九十百千万萬两兩';
 const CHAPTER_RE = new RegExp(
@@ -60,15 +62,14 @@ const CHAPTER_RE = new RegExp(
 const MAX_TITLE_LEN = 40;
 // 以句號等結尾的多半是內文（例如「第一节课下课了。」），不是標題
 const SENTENCE_END_RE = /[。！？!?…」”"]$/;
+// 「第N章/回」開頭的標題常以問號、驚嘆號結尾（「第101章你想不想？」），只排除句號類
+const NUMBERED_RE = new RegExp(`^第[${NUM}]+[章回]`);
+const NUMBERED_END_RE = /[。…」”"]$/;
 const CHUNK_SIZE = 8000;
 
 function isChapterTitle(line) {
-  return (
-    line.length > 0 &&
-    line.length <= MAX_TITLE_LEN &&
-    !SENTENCE_END_RE.test(line) &&
-    CHAPTER_RE.test(line)
-  );
+  if (line.length === 0 || line.length > MAX_TITLE_LEN || !CHAPTER_RE.test(line)) return false;
+  return NUMBERED_RE.test(line) ? !NUMBERED_END_RE.test(line) : !SENTENCE_END_RE.test(line);
 }
 
 /** 沒偵測到章節時，按長度切成「第 N 段」，切點落在換行上。 */
@@ -112,6 +113,23 @@ export function splitChapters(rawText) {
   const hasRealChapters = result.length > 1 || (result.length === 1 && result[0].title !== '前言');
   if (!hasRealChapters) return chunkByLength(text.trim());
   return result;
+}
+
+/**
+ * 把章節依字數分塊（存進 IndexedDB 時一塊一筆，閱讀時只載入目前那塊）。
+ * 回傳每塊第一章的序號；一塊至少一章，加入下一章會超過 maxChars 就換塊。
+ */
+export function chunkStartsFor(lens, maxChars) {
+  const starts = [];
+  let size = 0;
+  lens.forEach((len, i) => {
+    if (i === 0 || size + len > maxChars) {
+      starts.push(i);
+      size = 0;
+    }
+    size += len;
+  });
+  return starts;
 }
 
 /** 從檔名推書名：去副檔名、去書名號。 */

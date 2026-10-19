@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { decodeText, splitChapters, titleFromFilename, parseBook } from '../js/parser.js';
+import { decodeText, splitChapters, titleFromFilename, parseBook, chunkStartsFor } from '../js/parser.js';
 
 const fixture = (name) => readFileSync(new URL(`./fixtures/${name}`, import.meta.url));
 const utf8 = (s) => new TextEncoder().encode(s);
@@ -90,4 +90,27 @@ test('parseBook returns title and chapters from GBK file', () => {
     book.chapters.map((c) => c.title),
     ['前言', '第一章 陨落的天才', '第二章 斗气大陆']
   );
+});
+
+test('accepts 第N章 headings ending with ？ or ！', () => {
+  const text = '第101章你想不想？\na\n第102章又出事了！\nb\n第103章 好\nc';
+  assert.deepEqual(
+    splitChapters(text).map((c) => c.title),
+    ['第101章你想不想？', '第102章又出事了！', '第103章 好']
+  );
+});
+
+test('still treats 第N章 lines ending with 。 as body text', () => {
+  const chapters = splitChapters('第1章 a\n第二章节结束了。\nb');
+  assert.equal(chapters.length, 1);
+});
+
+test('chunkStartsFor groups chapters until the char budget is exceeded', () => {
+  const lens = [40, 40, 40, 100, 10, 10];
+  assert.deepEqual(chunkStartsFor(lens, 100), [0, 2, 3, 4]);
+});
+
+test('chunkStartsFor puts every chapter in some chunk', () => {
+  assert.deepEqual(chunkStartsFor([5], 100), [0]);
+  assert.deepEqual(chunkStartsFor([500, 500], 100), [0, 1]);
 });

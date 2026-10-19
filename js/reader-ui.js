@@ -2,6 +2,7 @@
 
 import * as reader from './reader.js';
 import { THEMES, FONTS, LIMITS, loadSettings, saveSettings, applySettings } from './settings.js';
+import { setChildren } from './dom.js';
 
 const SWIPE_MIN_PX = 40;
 const TAP_PREV_ZONE = 0.3;
@@ -45,7 +46,7 @@ export function onBookOpened() {
     li.dataset.index = String(i);
     frag.append(li);
   });
-  tocList.replaceChildren(frag);
+  setChildren(tocList, [frag]);
   slider.max = String(Math.max(0, chapterTitles.length - 1));
   closeAllPanels();
 }
@@ -60,7 +61,7 @@ function closeAllPanels() {
   settingsPanel.hidden = true;
 }
 
-function showToast(message) {
+export function showToast(message) {
   toast.textContent = message;
   toast.hidden = false;
   clearTimeout(toastTimer);
@@ -116,8 +117,8 @@ function bindKeyboard() {
 // ---------- 選單 ----------
 
 function openMenu() {
+  menu.hidden = false; // 先顯示，syncMenu 才不會因為選單隱藏而跳過
   syncMenu();
-  menu.hidden = false;
 }
 
 function syncMenu() {
@@ -182,7 +183,8 @@ function updateSettings(patch) {
 }
 
 function renderOptions(container, entries, activeKey, key, decorate) {
-  const buttons = Object.entries(entries).map(([id, item]) => {
+  const buttons = Object.keys(entries).map((id) => {
+    const item = entries[id];
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.textContent = item.label;
@@ -191,7 +193,7 @@ function renderOptions(container, entries, activeKey, key, decorate) {
     decorate?.(btn, item);
     return btn;
   });
-  container.replaceChildren(...buttons);
+  setChildren(container, buttons);
 }
 
 function renderSettings() {

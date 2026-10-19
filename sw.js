@@ -1,19 +1,13 @@
 // 離線快取：安裝時預先快取所有程式檔，之後一律先讀快取。
-// 改版時把 VERSION 加一，舊快取會在啟用時刪掉。
+// VERSION 由 npm run build 依檔案內容自動產生，舊快取會在啟用時刪掉。
 
-const VERSION = 'v1';
+const VERSION = 'd6faa757d57f';
 const CACHE = `novel-reader-${VERSION}`;
 const ASSETS = [
   './',
   'index.html',
   'css/style.css',
-  'js/app.js',
-  'js/db.js',
-  'js/parser.js',
-  'js/reader.js',
-  'js/reader-ui.js',
-  'js/settings.js',
-  'js/shelf.js',
+  'dist/app.js',
   'manifest.webmanifest',
   'icons/icon-180.png',
   'icons/icon-192.png',
@@ -34,7 +28,10 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const { request } = event;
-  if (request.method !== 'GET' || new URL(request.url).origin !== self.location.origin) return;
+  const url = new URL(request.url);
+  if (request.method !== 'GET' || url.origin !== self.location.origin) return;
+  // 內建書（books/）一律直接走網路，離線時由程式自己處理錯誤
+  if (url.pathname.indexOf('/books/') !== -1) return;
   event.respondWith(
     caches.match(request, { ignoreSearch: true }).then((cached) => cached || fetch(request))
   );

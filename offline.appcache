@@ -1,0 +1,13 @@
+CACHE MANIFEST
+# version d6faa757d57f
+
+CACHE:
+css/style.css
+dist/app.js
+manifest.webmanifest
+icons/icon-180.png
+icons/icon-192.png
+icons/icon-512.png
+
+NETWORK:
+*

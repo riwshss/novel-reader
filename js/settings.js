@@ -20,7 +20,14 @@ export const LIMITS = {
   lineHeight: { min: 1.4, max: 2.4, step: 0.1 },
 };
 
-const DEFAULTS = { fontSize: 19, lineHeight: 1.8, theme: 'sepia', font: 'serif' };
+const NARROW_SCREEN_PX = 360;
+// iPhone 5 這種 320px 寬的螢幕預設字小一號，一行才不會只有十來個字
+const DEFAULTS = {
+  fontSize: window.innerWidth < NARROW_SCREEN_PX ? 18 : 19,
+  lineHeight: 1.8,
+  theme: 'sepia',
+  font: 'serif',
+};
 
 function clamp(value, { min, max }) {
   return Math.min(max, Math.max(min, value));

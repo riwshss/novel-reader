@@ -1,0 +1,12 @@
+{
+  "books": [
+    {
+      "id": "zuoju",
+      "title": "做局",
+      "salt": "064caebea964f2bbf713b1579c8be77f",
+      "iterations": 20000,
+      "chunkCount": 70,
+      "builtAt": 1792394027240
+    }
+  ]
+}

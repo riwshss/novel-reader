@@ -1,7 +1,9 @@
 // 入口：在書架與閱讀器之間切換，記住上次打開的書，下次啟動直接回到那本。
 
 import { initShelf, refreshShelf, showStatus } from './shelf.js';
-import { initReaderUi, onBookOpened } from './reader-ui.js';
+import { initReaderUi, onBookOpened, showToast } from './reader-ui.js';
+import { loadBuiltinChunk, downloadRemaining, isFullyDownloaded } from './builtin.js';
+import { getBook } from './db.js';
 import * as reader from './reader.js';
 
 const LAST_BOOK_KEY = 'novel-reader:last-book';
@@ -40,8 +42,21 @@ async function openBook(id) {
   shelfView.hidden = true;
   readerView.hidden = false;
   onBookOpened();
-  reader.start();
   rememberBook(id);
+  await reader.start();
+  prefetchBuiltin(id);
+}
+
+/** 內建書在背景把剩下的全文下載完，之後就能離線讀。 */
+async function prefetchBuiltin(id) {
+  const book = await getBook(id).catch(() => null);
+  if (!book || !book.builtin || isFullyDownloaded(book)) return;
+  try {
+    await downloadRemaining(id, () => {});
+    showToast(`《${book.title}》已全部下載，可以離線閱讀了`);
+  } catch (err) {
+    console.warn('背景下載中斷，下次打開會繼續', err);
+  }
 }
 
 async function showShelf() {
@@ -66,15 +81,25 @@ function bindLifecycle() {
 }
 
 function registerServiceWorker() {
-  if (!('serviceWorker' in navigator)) return;
+  if (!('serviceWorker' in navigator)) return; // iOS 10 沒有，改由 offline.appcache 離線
+  // eslint-disable-next-line compat/compat -- 上一行已檢查
   navigator.serviceWorker.register('sw.js').catch((err) => console.warn('離線快取註冊失敗', err));
 }
 
+/** iOS 10 沒有 safe-area，加到主畫面後內容會被半透明狀態列蓋住，手動留 20px。 */
+function fixLegacyStatusBar() {
+  const supportsEnv = window.CSS && CSS.supports && CSS.supports('padding-top: env(safe-area-inset-top)');
+  if (navigator.standalone && !supportsEnv) document.documentElement.classList.add('legacy-standalone');
+}
+
 async function main() {
+  fixLegacyStatusBar();
+  reader.setChunkLoader(loadBuiltinChunk);
   initShelf({ onOpen: openBook });
   initReaderUi({ onBack: showShelf });
   bindLifecycle();
   registerServiceWorker();
+  // eslint-disable-next-line compat/compat -- 用 ?. 檢查過，iOS 10 沒有就跳過
   navigator.storage?.persist?.().catch(() => {});
 
   const id = lastBook();

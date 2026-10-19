@@ -9,9 +9,25 @@
   --line-height: 1.8;
   --font: "Songti SC", serif;
   --pad-x: 22px;
-  --safe-top: env(safe-area-inset-top, 0px);
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  /* iOS 10 不認得 env()，整個 calc 會失效，所以預設 0，支援時才改用 env() */
+  --safe-top: 0px;
+  --safe-bottom: 0px;
   --ui-font: -apple-system, "PingFang TC", "PingFang SC", "Microsoft JhengHei", sans-serif;
+}
+
+@supports (padding-top: env(safe-area-inset-top)) {
+  :root {
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+
+/* iOS 10 從主畫面開啟時，半透明狀態列會蓋住內容（app.js 加上這個 class） */
+html.legacy-standalone { --safe-top: 20px; }
+
+/* iPhone 5 / SE 一代（320px 寬）：留白收窄、按鈕縮小 */
+@media (max-width: 359px) {
+  :root { --pad-x: 16px; }
 }
 
 * { box-sizing: border-box; }
@@ -41,7 +57,10 @@ button {
 
 .view {
   position: fixed;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
 }
 
 /* ---------- 書架 ---------- */
@@ -91,14 +110,13 @@ button {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: grid;
-  gap: 10px;
 }
 
 .book-item {
+  display: -webkit-flex;
   display: flex;
   align-items: center;
-  gap: 14px;
+  margin-bottom: 10px;
   padding: 12px;
   border-radius: 14px;
   background: var(--panel);
@@ -109,9 +127,12 @@ button {
   flex: none;
   width: 52px;
   height: 70px;
+  margin-right: 14px;
   border-radius: 4px 8px 8px 4px;
-  display: grid;
-  place-items: center;
+  display: -webkit-flex;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 4px;
   color: #fff;
   font-family: "Songti SC", "Songti TC", serif;
@@ -158,8 +179,11 @@ button {
   background: var(--accent);
 }
 
+.book-item.locked .book-meta { color: var(--accent); }
+
 .book-delete {
   flex: none;
+  margin-left: 6px;
   width: 36px;
   height: 36px;
   border-radius: 50%;
@@ -179,7 +203,10 @@ button {
 /* ---------- 閱讀器 ---------- */
 .stage {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   overflow: hidden;
   user-select: none;
   -webkit-user-select: none;
@@ -225,6 +252,7 @@ button {
 
 .page-content {
   height: 100%;
+  -webkit-column-fill: auto;
   column-fill: auto;
   font-family: var(--font);
   font-size: var(--font-size);
@@ -234,6 +262,7 @@ button {
 }
 
 .page-content.animate {
+  -webkit-transition: -webkit-transform 0.22s ease-out;
   transition: transform 0.22s ease-out;
 }
 
@@ -243,19 +272,30 @@ button {
   line-height: 1.4;
   font-weight: 700;
   text-align: left;
+  -webkit-column-break-after: avoid;
   break-after: avoid;
 }
 
 .page-content p {
   margin: 0 0 0.45em;
   text-indent: 2em;
+  word-wrap: break-word;
   overflow-wrap: anywhere;
+}
+
+.page-content p.notice {
+  text-indent: 0;
+  white-space: pre-line;
+  color: var(--sub);
 }
 
 /* 選單 */
 .menu {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   display: flex;
   flex-direction: column;
   z-index: 10;
@@ -270,12 +310,12 @@ button {
 .menu-top {
   display: flex;
   align-items: center;
-  gap: 12px;
   padding: calc(var(--safe-top) + 8px) 16px 10px;
 }
 
 .menu-title {
   flex: 1;
+  margin-left: 12px;
   min-width: 0;
   font-weight: 600;
   white-space: nowrap;
@@ -302,12 +342,13 @@ button {
 .chapter-nav {
   display: flex;
   align-items: center;
-  gap: 12px;
   margin: 6px 0 10px;
 }
 
 .chapter-nav input {
   flex: 1;
+  min-width: 0;
+  margin: 0 12px;
   accent-color: var(--accent);
 }
 
@@ -327,18 +368,20 @@ button {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
   min-width: 64px;
   padding: 6px;
   font-size: 20px;
 }
 
-.btn-icon span { font-size: 12px; }
+.btn-icon span { margin-top: 2px; font-size: 12px; }
 
 /* 目錄抽屜 */
 .drawer {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 20;
   display: flex;
 }
@@ -394,7 +437,10 @@ button {
 /* 設定面板 */
 .sheet {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 20;
   display: flex;
   flex-direction: column;
@@ -413,11 +459,11 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
   padding: 10px 0;
 }
 
 .setting-name {
+  margin-right: 12px;
   font-size: 15px;
   white-space: nowrap;
 }
@@ -425,11 +471,11 @@ button {
 .stepper {
   display: flex;
   align-items: center;
-  gap: 8px;
 }
 
 .stepper span {
   min-width: 44px;
+  margin: 0 8px;
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
@@ -445,9 +491,13 @@ button {
 
 .options {
   display: flex;
-  gap: 8px;
   flex-wrap: wrap;
   justify-content: flex-end;
+  margin-top: -6px;
+}
+
+.options button {
+  margin: 6px 0 0 8px;
 }
 
 .options button.active {
@@ -474,4 +524,19 @@ button {
   font-size: 14px;
   pointer-events: none;
   white-space: nowrap;
+}
+
+@media (max-width: 359px) {
+  .shelf-header h1 { font-size: 26px; }
+  .btn-primary { padding: 8px 13px; font-size: 14px; }
+  .book-item { padding: 10px; }
+  .book-cover { width: 46px; height: 62px; margin-right: 12px; }
+  .book-title { font-size: 16px; }
+  .sheet-panel { padding-left: 12px; padding-right: 12px; }
+  .stepper button,
+  .options button { min-width: 44px; padding: 6px 9px; font-size: 14px; }
+  .options button { margin-left: 6px; }
+  .stepper span { min-width: 36px; margin: 0 6px; }
+  .btn-text { font-size: 14px; }
+  .chapter-nav input { margin: 0 8px; }
 }
