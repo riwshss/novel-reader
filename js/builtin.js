@@ -116,13 +116,30 @@ async function fetchChunk(book, k) {
   return texts;
 }
 
+const RETRY_DELAYS_MS = [2000, 5000, 15000, 30000];
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** 網路斷一下（國內連 GitHub Pages 常見、或鎖螢幕被暫停）就等一下再試，不要整個停掉。 */
+async function loadWithRetry(book, k) {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await loadBuiltinChunk(book, k);
+    } catch (err) {
+      if (attempt >= RETRY_DELAYS_MS.length) throw err;
+      console.warn(`第 ${k} 塊下載失敗，稍後重試`, err);
+      await sleep(RETRY_DELAYS_MS[attempt]);
+    }
+  }
+}
+
 /** 背景把還沒下載的塊一塊一塊補齊（一次一塊，省記憶體）。 */
 export async function downloadRemaining(bookId, onProgress) {
   const book = await getBook(bookId);
   if (!book || !book.builtin) return;
   for (let k = 0; k < book.chunkStarts.length; k++) {
     if (book.ready && book.ready[k]) continue;
-    await loadBuiltinChunk(book, k);
+    await loadWithRetry(book, k);
     onProgress(k);
   }
 }

@@ -1,7 +1,7 @@
 // 離線快取：安裝時預先快取所有程式檔，之後一律先讀快取。
 // VERSION 由 npm run build 依檔案內容自動產生，舊快取會在啟用時刪掉。
 
-const VERSION = 'd6faa757d57f';
+const VERSION = '5b676ff1f0d2';
 const CACHE = `novel-reader-${VERSION}`;
 const ASSETS = [
   './',

@@ -3149,13 +3149,28 @@
       return texts;
     });
   }
+  var RETRY_DELAYS_MS = [2e3, 5e3, 15e3, 3e4];
+  var sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  function loadWithRetry(book, k) {
+    return __async(this, null, function* () {
+      for (let attempt = 0; ; attempt++) {
+        try {
+          return yield loadBuiltinChunk(book, k);
+        } catch (err2) {
+          if (attempt >= RETRY_DELAYS_MS.length) throw err2;
+          console.warn("\u7B2C ".concat(k, " \u584A\u4E0B\u8F09\u5931\u6557\uFF0C\u7A0D\u5F8C\u91CD\u8A66"), err2);
+          yield sleep(RETRY_DELAYS_MS[attempt]);
+        }
+      }
+    });
+  }
   function downloadRemaining(bookId, onProgress) {
     return __async(this, null, function* () {
       const book = yield getBook(bookId);
       if (!book || !book.builtin) return;
       for (let k = 0; k < book.chunkStarts.length; k++) {
         if (book.ready && book.ready[k]) continue;
-        yield loadBuiltinChunk(book, k);
+        yield loadWithRetry(book, k);
         onProgress(k);
       }
     });
@@ -3970,6 +3985,7 @@
   var RESIZE_DEBOUNCE_MS = 150;
   var shelfView = document.getElementById("shelf");
   var readerView = document.getElementById("reader");
+  var downloading = {};
   function rememberBook(id) {
     try {
       if (id) localStorage.setItem(LAST_BOOK_KEY, id);
@@ -4006,15 +4022,27 @@
   }
   function prefetchBuiltin(id) {
     return __async(this, null, function* () {
+      if (downloading[id]) return;
       const book = yield getBook(id).catch(() => null);
       if (!book || !book.builtin || isFullyDownloaded(book)) return;
+      downloading[id] = true;
       try {
         yield downloadRemaining(id, () => {
         });
         showToast("\u300A".concat(book.title, "\u300B\u5DF2\u5168\u90E8\u4E0B\u8F09\uFF0C\u53EF\u4EE5\u96E2\u7DDA\u95B1\u8B80\u4E86"));
       } catch (err2) {
-        console.warn("\u80CC\u666F\u4E0B\u8F09\u4E2D\u65B7\uFF0C\u4E0B\u6B21\u6253\u958B\u6703\u7E7C\u7E8C", err2);
+        console.warn("\u80CC\u666F\u4E0B\u8F09\u4E2D\u65B7\uFF0C\u6709\u7DB2\u8DEF\u6642\u6703\u81EA\u52D5\u7E7C\u7E8C", err2);
+        const latest = yield getBook(id).catch(() => null);
+        if (latest) showToast("\u4E0B\u8F09\u4E2D\u65B7\uFF08".concat(readyCount(latest), "/").concat(latest.chunkStarts.length, "\uFF09\uFF0C\u6709\u7DB2\u8DEF\u6642\u6703\u81EA\u52D5\u7E7C\u7E8C\uFF0C\u5148\u5225\u96E2\u7DDA"));
+      } finally {
+        downloading[id] = false;
       }
+    });
+  }
+  function resumeDownloads() {
+    return __async(this, null, function* () {
+      const books = yield listBooks().catch(() => []);
+      books.forEach((b) => prefetchBuiltin(b.id));
     });
   }
   function showShelf() {
@@ -4034,7 +4062,9 @@
     });
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "hidden") flushProgress();
+      else resumeDownloads();
     });
+    window.addEventListener("online", resumeDownloads);
     window.addEventListener("pagehide", () => flushProgress());
   }
   function registerServiceWorker() {
@@ -4059,6 +4089,7 @@
       const id = lastBook();
       if (id) yield openBook(id);
       else yield refreshShelf();
+      resumeDownloads();
     });
   }
   main();

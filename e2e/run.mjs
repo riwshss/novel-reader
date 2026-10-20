@@ -158,13 +158,16 @@ async function checkBuiltin(session, step, shot) {
   await page.waitForFunction(() => /密碼錯誤/.test(document.getElementById('shelf-status').textContent));
   step('內建書輸入錯誤密碼被擋下 ✓');
 
+  // 背景下載中途斷一次網路（國內連 GitHub Pages 常見），應該自動重試而不是停住
+  session.server.dropOnce.add('/books/testbook/c2.bin');
   session.promptAnswer = FIXTURE_PASSWORD;
   await page.click('.book-item.locked');
   await page.waitForSelector('#reader:not([hidden])');
   await page.waitForFunction(() => document.getElementById('chapter-name').textContent === '第1章 内建1');
   assert.match((await visibleParagraphs(page))[1], /内建第1章第1段/);
   await page.waitForFunction(() => /已全部下載/.test(document.getElementById('toast').textContent), null, { timeout: 15000 });
-  step('正確密碼解鎖、讀到第1章、背景下載完成 ✓');
+  assert.equal(session.server.dropOnce.size, 0, '測試沒有攔到 c2.bin');
+  step('正確密碼解鎖、讀到第1章、下載中途斷線後自動重試完成 ✓');
 
   await tapAt(page, 0.5);
   await page.click('#btn-toc');
