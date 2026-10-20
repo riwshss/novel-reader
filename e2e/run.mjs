@@ -159,15 +159,21 @@ async function checkBuiltin(session, step, shot) {
   step('內建書輸入錯誤密碼被擋下 ✓');
 
   // 背景下載中途斷一次網路（國內連 GitHub Pages 常見），應該自動重試而不是停住
-  session.server.dropOnce.add('/books/testbook/c2.bin');
+  session.server.failOnce.add('/books/testbook/c2.bin');
   session.promptAnswer = FIXTURE_PASSWORD;
   await page.click('.book-item.locked');
   await page.waitForSelector('#reader:not([hidden])');
   await page.waitForFunction(() => document.getElementById('chapter-name').textContent === '第1章 内建1');
   assert.match((await visibleParagraphs(page))[1], /内建第1章第1段/);
+  // c2 斷線後要等 2 秒重試，這段時間進度條應該一直在
+  await page.waitForFunction(() => /^下載中 [0-9]+\/[0-9]+$/.test(document.getElementById('download-text').textContent));
+  assert.equal(await page.locator('#download').isVisible(), true, '下載中進度條應該看得到');
+  const fill = await page.evaluate(() => parseFloat(document.getElementById('download-fill').style.width));
+  assert.ok(fill > 0 && fill < 100, `進度條寬度 ${fill}%`);
   await page.waitForFunction(() => /已全部下載/.test(document.getElementById('toast').textContent), null, { timeout: 15000 });
-  assert.equal(session.server.dropOnce.size, 0, '測試沒有攔到 c2.bin');
-  step('正確密碼解鎖、讀到第1章、下載中途斷線後自動重試完成 ✓');
+  assert.equal(await page.locator('#download').isHidden(), true, '下載完進度條應該收起來');
+  assert.equal(session.server.failOnce.size, 0, '測試沒有攔到 c2.bin');
+  step('正確密碼解鎖、讀到第1章、進度條顯示、下載中途斷線後自動重試完成、進度條消失 ✓');
 
   await tapAt(page, 0.5);
   await page.click('#btn-toc');

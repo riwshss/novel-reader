@@ -26,6 +26,42 @@
 html.legacy-standalone { --safe-top: 20px; }
 
 /* iPhone 5 / SE 一代（320px 寬）：留白收窄、按鈕縮小 */
+/* 內建書背景下載進度：放在頁尾頁碼與時間中間的空位，跟著主題配色 */
+.download {
+  position: fixed;
+  left: 50%;
+  bottom: var(--safe-bottom);
+  transform: translateX(-50%);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 8px;
+  background: var(--bg);
+  color: var(--accent);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.download-bar {
+  width: 48px;
+  height: 4px;
+  margin-left: 6px;
+  border-radius: 2px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.download-fill {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.3s;
+}
+
 @media (max-width: 359px) {
   :root { --pad-x: 16px; }
 }

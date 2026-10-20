@@ -20,6 +20,7 @@ const settingsPanel = $('settings-panel');
 const slider = $('chapter-slider');
 const sliderLabel = $('slider-label');
 const toast = $('toast');
+const download = $('download');
 
 let settings = loadSettings();
 let toastTimer = null;
@@ -68,6 +69,17 @@ export function showToast(message) {
   toastTimer = setTimeout(() => {
     toast.hidden = true;
   }, TOAST_MS);
+}
+
+/** 內建書背景下載進度；done >= total 或沒給就收起來。 */
+export function showDownload(done, total) {
+  if (!total || done >= total) {
+    download.hidden = true;
+    return;
+  }
+  $('download-text').textContent = `下載中 ${done}/${total}`;
+  $('download-fill').style.width = `${(done / total) * 100}%`;
+  download.hidden = false;
 }
 
 // ---------- 翻頁手勢 ----------

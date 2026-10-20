@@ -133,14 +133,17 @@ async function loadWithRetry(book, k) {
   }
 }
 
-/** 背景把還沒下載的塊一塊一塊補齊（一次一塊，省記憶體）。 */
+/** 背景把還沒下載的塊一塊一塊補齊（一次一塊，省記憶體）。onProgress(已下載塊數, 總塊數)。 */
 export async function downloadRemaining(bookId, onProgress) {
   const book = await getBook(bookId);
   if (!book || !book.builtin) return;
-  for (let k = 0; k < book.chunkStarts.length; k++) {
+  const total = book.chunkStarts.length;
+  let done = readyCount(book);
+  onProgress(done, total);
+  for (let k = 0; k < total; k++) {
     if (book.ready && book.ready[k]) continue;
     await loadWithRetry(book, k);
-    onProgress(k);
+    onProgress(++done, total);
   }
 }
 

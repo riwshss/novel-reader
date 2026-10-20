@@ -1,7 +1,7 @@
 // 入口：在書架與閱讀器之間切換，記住上次打開的書，下次啟動直接回到那本。
 
 import { initShelf, refreshShelf, showStatus } from './shelf.js';
-import { initReaderUi, onBookOpened, showToast } from './reader-ui.js';
+import { initReaderUi, onBookOpened, showToast, showDownload } from './reader-ui.js';
 import { loadBuiltinChunk, downloadRemaining, isFullyDownloaded } from './builtin.js';
 import { getBook, listBooks } from './db.js';
 import { readyCount } from './book.js';
@@ -56,7 +56,7 @@ async function prefetchBuiltin(id) {
   if (!book || !book.builtin || isFullyDownloaded(book)) return;
   downloading[id] = true;
   try {
-    await downloadRemaining(id, () => {});
+    await downloadRemaining(id, showDownload);
     showToast(`《${book.title}》已全部下載，可以離線閱讀了`);
   } catch (err) {
     console.warn('背景下載中斷，有網路時會自動繼續', err);
@@ -64,6 +64,7 @@ async function prefetchBuiltin(id) {
     if (latest) showToast(`下載中斷（${readyCount(latest)}/${latest.chunkStarts.length}），有網路時會自動繼續，先別離線`);
   } finally {
     downloading[id] = false;
+    showDownload(0, 0);
   }
 }
 

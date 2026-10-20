@@ -3168,10 +3168,13 @@
     return __async(this, null, function* () {
       const book = yield getBook(bookId);
       if (!book || !book.builtin) return;
-      for (let k = 0; k < book.chunkStarts.length; k++) {
+      const total = book.chunkStarts.length;
+      let done = readyCount(book);
+      onProgress(done, total);
+      for (let k = 0; k < total; k++) {
         if (book.ready && book.ready[k]) continue;
         yield loadWithRetry(book, k);
-        onProgress(k);
+        onProgress(++done, total);
       }
     });
   }
@@ -3786,6 +3789,7 @@
   var slider = $("chapter-slider");
   var sliderLabel = $("slider-label");
   var toast = $("toast");
+  var download = $("download");
   var settings = loadSettings();
   var toastTimer = null;
   function initReaderUi({ onBack }) {
@@ -3827,6 +3831,15 @@
     toastTimer = setTimeout(() => {
       toast.hidden = true;
     }, TOAST_MS);
+  }
+  function showDownload(done, total) {
+    if (!total || done >= total) {
+      download.hidden = true;
+      return;
+    }
+    $("download-text").textContent = "\u4E0B\u8F09\u4E2D ".concat(done, "/").concat(total);
+    $("download-fill").style.width = "".concat(done / total * 100, "%");
+    download.hidden = false;
   }
   function bindStage() {
     let touchStart = null;
@@ -4027,8 +4040,7 @@
       if (!book || !book.builtin || isFullyDownloaded(book)) return;
       downloading[id] = true;
       try {
-        yield downloadRemaining(id, () => {
-        });
+        yield downloadRemaining(id, showDownload);
         showToast("\u300A".concat(book.title, "\u300B\u5DF2\u5168\u90E8\u4E0B\u8F09\uFF0C\u53EF\u4EE5\u96E2\u7DDA\u95B1\u8B80\u4E86"));
       } catch (err2) {
         console.warn("\u80CC\u666F\u4E0B\u8F09\u4E2D\u65B7\uFF0C\u6709\u7DB2\u8DEF\u6642\u6703\u81EA\u52D5\u7E7C\u7E8C", err2);
@@ -4036,6 +4048,7 @@
         if (latest) showToast("\u4E0B\u8F09\u4E2D\u65B7\uFF08".concat(readyCount(latest), "/").concat(latest.chunkStarts.length, "\uFF09\uFF0C\u6709\u7DB2\u8DEF\u6642\u6703\u81EA\u52D5\u7E7C\u7E8C\uFF0C\u5148\u5225\u96E2\u7DDA"));
       } finally {
         downloading[id] = false;
+        showDownload(0, 0);
       }
     });
   }

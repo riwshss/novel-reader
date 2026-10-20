@@ -18,12 +18,12 @@ const TYPES = {
 
 /**
  * 靜態伺服器；books/ 底下改由 booksDir 提供（測試用內建書或真正的書）。
- * 路徑放進 server.dropOnce 的話，下一次請求會直接斷線（模擬網路不穩）。
+ * 路徑放進 server.failOnce 的話，下一次請求回 503（模擬網路不穩；直接斷線的話 Chromium 會自己重試）。
  */
 export function startServer(booksDir) {
   const server = createServer(async (req, res) => {
     const urlPath = decodeURIComponent(new URL(req.url, 'http://x').pathname);
-    if (server.dropOnce.delete(urlPath)) return req.socket.destroy();
+    if (server.failOnce.delete(urlPath)) return res.writeHead(503).end('busy');
     const rel = normalize(urlPath === '/' ? '/index.html' : urlPath).replace(/^([\\/])+/, '');
     const file = rel.startsWith('books') ? join(booksDir, rel.slice('books'.length)) : join(ROOT, rel);
     try {
@@ -34,7 +34,7 @@ export function startServer(booksDir) {
       res.writeHead(404).end('not found');
     }
   });
-  server.dropOnce = new Set();
+  server.failOnce = new Set();
   return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve(server)));
 }
 
